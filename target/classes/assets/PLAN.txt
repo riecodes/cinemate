@@ -1,0 +1,151 @@
+✅ 1. Project Overview
+Title: The CineMate — Movie Ticket Reservation
+Language/Platform: Java SE 8
+GUI Framework: Java Swing (via WindowBuilder in Eclipse)
+Persistence: File-based or Database (preferred for login & bookings)
+Minimum Feature Requirements:
+
+CRUD operations
+
+Receipt printing
+
+Dynamic seat availability
+
+Persistent storage
+
+Simulated payment
+
+Admin features
+
+User login/logout
+
+📋 2. Key Components To Implement
+🔹 A. Main Forms & Navigation
+Main Menu (Options Form)
+
+Check Schedule
+
+Check Prices
+
+Proceed to Reservation
+
+Log in / Log out
+
+🔹 B. Movie System
+Movie Schedule (CRUD for admins)
+
+One cinema station (for simplicity)
+
+Assume fixed 1-hour duration per movie
+
+System date = booking date (no need for future booking complexity)
+
+🔹 C. Seat Reservation
+Show visual seat layout (buttons/grid)
+
+Select available seats
+
+Mark already-reserved seats as disabled
+
+Cancel mid-process = discard changes
+
+Saving must ensure seat is locked for same date & time
+
+🔹 D. Booking Details & Confirmation
+Input customer details (Name, Age, etc.)
+
+Payment (simulated success/fail)
+
+Save booking info
+
+Print receipt
+
+🔹 E. Admin Panel
+Log in required
+
+Can:
+
+Add/Edit/Delete movie listings (CRUD)
+
+View reservations/bookings
+
+View user list (if needed)
+
+💾 3. Storage Requirements
+Option A: Text File-Based
+movies.txt – stores movie title, date, time
+
+seats.txt – stores reserved seats per showtime
+
+users.txt – for login system
+
+bookings.txt – stores finalized bookings
+
+Option B: Database (Recommended)
+users (username, password, role)
+
+movies (title, date, time)
+
+seats (movie_id, seat_number, status)
+
+bookings (user_id, movie_id, seats_reserved, payment_status)
+
+🧱 4. Required Classes (OOP Design)
+Class Name	Responsibility
+MainApp	Entry point, handles navigation
+Movie	Model for movie data
+MovieManager	CRUD operations on movie
+User	Model for user
+UserManager	Handles login/logout, registration
+Seat	Represents a seat
+SeatManager	Logic for availability, reserving
+Booking	Stores booking info
+BookingManager	Creates, saves, loads bookings
+PaymentProcessor	Simulates payment
+ReceiptPrinter	Prints receipt to file or console
+Database (if DB used)	Handles DB connection & queries
+
+🖼️ 5. GUI Forms (with Swing / WindowBuilder)
+Form Name	Contents
+MainMenuForm	Navigation buttons
+ScheduleForm	Movie schedule display
+PricesForm	Price list display
+ReservationForm	Seat layout, movie selector
+UserDetailsForm	Input name, age, etc.
+PaymentForm	Simulated payment
+ReceiptForm	Shows and prints receipt
+AdminLoginForm	Login credentials
+AdminPanelForm	CRUD movies + view bookings
+
+💡 6. Other Technical Notes
+Seat Layout: Use a grid of JButtons; disable if taken.
+
+Persistence: Use file read/write or SQLite/MySQL.
+
+Simulated Payment: Simple if/else dialog box.
+
+Receipt Printing: Can write to .txt file using PrintWriter.
+
+Cancel Behavior: Use temp storage; discard if canceled.
+
+Booking Locking: Compare against current reserved seats.
+
+🚧 7. Challenges & Solutions (From Proposal)
+Challenge	Solution
+Designing UI	Design per form (1 screen at a time)
+Dynamic Seat Avail.	Use arrays/DB + disable reserved seats
+Input Validation	Use try-catch, JOptionPane errors
+Payment Sim	Mock logic with message boxes
+Data Loss	Save data on file/database exit
+Advance Booking	Skip; use system date only (per instruction)
+
+📌 8. Minimum Output Requirements
+🎫 Print-friendly receipt
+
+🔁 CRUD (admin movie management)
+
+🪑 Dynamic, persistent seat handling
+
+🔒 Login system
+
+💸 Payment simulation
