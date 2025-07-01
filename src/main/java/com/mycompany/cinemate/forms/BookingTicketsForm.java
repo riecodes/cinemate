@@ -96,7 +96,7 @@ public class BookingTicketsForm extends JFrame {
         backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setFocusPainted(false);
         
-        proceedButton = new JButton("PROCEED TO CONFIRMATION");
+        proceedButton = new JButton("PROCEED TO PAYMENT");
         proceedButton.setFont(new Font("Arial", Font.BOLD, 16));
         proceedButton.setBackground(new Color(255, 220, 0));
         proceedButton.setForeground(Color.BLACK);
@@ -381,11 +381,11 @@ public class BookingTicketsForm extends JFrame {
             String customerPhone = phoneField.getText().trim();
             
             dispose();
-            ConfirmationForm confirmationForm = new ConfirmationForm(
+            PaymentForm paymentForm = new PaymentForm(
                 selectedMovie, selectedShowtime, selectedSeats,
                 ticketQuantities, customerName, customerEmail, customerPhone, totalPrice
             );
-            confirmationForm.setVisible(true);
+            paymentForm.setVisible(true);
         }
     }
     
