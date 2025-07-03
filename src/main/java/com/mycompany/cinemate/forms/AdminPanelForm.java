@@ -300,12 +300,10 @@ public class AdminPanelForm extends JFrame {
         
         // Add refresh button for dashboard
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.setBackground(Color.WHITE);
+        bottomPanel.setBackground(new Color(139, 0, 0));
         JButton refreshDataBtn = createStyledButton("Refresh Data", new Color(34, 139, 34));
         refreshDataBtn.addActionListener(e -> {
-            updateDashboardStats(totalSalesCard, totalTicketsCard, showingCard);
-            loadMovieSchedule((DefaultTableModel) scheduleTable.getModel());
-            JOptionPane.showMessageDialog(this, "Dashboard data refreshed!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            refreshAllData();
         });
         bottomPanel.add(refreshDataBtn);
         
@@ -978,43 +976,144 @@ public class AdminPanelForm extends JFrame {
     }
     
     private void refreshAllData() {
-        loadRealData();
-        JOptionPane.showMessageDialog(this, 
-            "All data refreshed successfully!", 
-            "Refresh Complete", 
-            JOptionPane.INFORMATION_MESSAGE);
+        try {
+            loadRealData();
+            
+            // Also refresh dashboard statistics if they exist
+            refreshDashboardStatistics();
+            
+            JOptionPane.showMessageDialog(this, 
+                "All data refreshed successfully!", 
+                "Refresh Complete", 
+                JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, 
+                "Error refreshing data: " + e.getMessage(), 
+                "Refresh Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     // Public method to refresh data from external sources
     public void refreshData() {
-        loadRealData();
-        // Also refresh dashboard statistics if on dashboard tab
-        if (tabbedPane.getSelectedIndex() == 0) {
-            JPanel dashboardPanel = (JPanel) tabbedPane.getComponentAt(0);
-            refreshDashboardStatistics(dashboardPanel);
+        refreshAllData();
+    }
+    
+    private void refreshDashboardStatistics() {
+        // Find the dashboard panel (first tab)
+        if (tabbedPane.getComponentCount() > 0) {
+            Component dashboardComponent = tabbedPane.getComponentAt(0);
+            if (dashboardComponent instanceof JPanel) {
+                JPanel dashboardPanel = (JPanel) dashboardComponent;
+                
+                // Update dashboard statistics cards
+                findAndUpdateStatsCards(dashboardPanel);
+                
+                // Also refresh the movie schedule table if it exists
+                refreshDashboardMovieSchedule(dashboardPanel);
+            }
         }
     }
     
-    private void refreshDashboardStatistics(JPanel dashboardPanel) {
-        // Find the statistics cards in the dashboard panel and update them
-        findAndUpdateStatsCards(dashboardPanel);
+    private void refreshDashboardMovieSchedule(JPanel dashboardPanel) {
+        // Find the movie schedule table in the dashboard
+        java.util.List<JTable> tables = findComponentsOfType(dashboardPanel, JTable.class);
+        for (JTable table : tables) {
+            if (table.getModel() instanceof DefaultTableModel) {
+                DefaultTableModel model = (DefaultTableModel) table.getModel();
+                // Check if this looks like the movie schedule table (3 columns)
+                if (model.getColumnCount() == 3) {
+                    model.setRowCount(0); // Clear existing data
+                    loadMovieSchedule(model);
+                    System.out.println("Movie schedule refreshed");
+                    break;
+                }
+            }
+        }
     }
     
     private void findAndUpdateStatsCards(Container container) {
+        // Store references to the stats cards when we find them
+        JPanel salesCard = null;
+        JPanel ticketsCard = null; 
+        JPanel showingCard = null;
+        
+        // Search for stats cards in the container hierarchy
+        java.util.List<JPanel> potentialStatsCards = new java.util.ArrayList<>();
+        collectStatsPanels(container, potentialStatsCards);
+        
+        // Try to identify the three stats cards by looking for specific patterns
+        for (JPanel panel : potentialStatsCards) {
+            String cardTitle = getStatCardTitle(panel);
+            if (cardTitle != null) {
+                if (cardTitle.toLowerCase().contains("sales")) {
+                    salesCard = panel;
+                } else if (cardTitle.toLowerCase().contains("tickets")) {
+                    ticketsCard = panel;
+                } else if (cardTitle.toLowerCase().contains("showing")) {
+                    showingCard = panel;
+                }
+            }
+        }
+        
+        // Update the stats if we found the cards
+        if (salesCard != null && ticketsCard != null && showingCard != null) {
+            updateDashboardStats(salesCard, ticketsCard, showingCard);
+            System.out.println("Dashboard statistics updated successfully");
+        } else {
+            System.out.println("Could not find all dashboard stats cards - Sales: " + (salesCard != null) + 
+                             ", Tickets: " + (ticketsCard != null) + ", Showing: " + (showingCard != null));
+        }
+    }
+    
+    private void collectStatsPanels(Container container, java.util.List<JPanel> panels) {
         Component[] components = container.getComponents();
         for (Component component : components) {
             if (component instanceof JPanel) {
                 JPanel panel = (JPanel) component;
-                // Check if this panel contains stats cards by looking for the characteristic layout
-                if (panel.getLayout() instanceof GridLayout && panel.getComponentCount() == 3) {
-                    Component[] statsCards = panel.getComponents();
-                    if (statsCards.length == 3) {
-                        updateDashboardStats((JPanel) statsCards[0], (JPanel) statsCards[1], (JPanel) statsCards[2]);
-                        return;
-                    }
+                
+                // Check if this looks like a stats card (has a border and contains labels)
+                if (panel.getBorder() != null && hasStatsCardStructure(panel)) {
+                    panels.add(panel);
                 }
+                
                 // Recursively search in child panels
-                findAndUpdateStatsCards(panel);
+                collectStatsPanels(panel, panels);
+            }
+        }
+    }
+    
+    private boolean hasStatsCardStructure(JPanel panel) {
+        // A stats card should have at least one label with a large font (for the value)
+        return findComponentsOfType(panel, JLabel.class).stream()
+               .anyMatch(label -> label.getFont().getSize() >= 24);
+    }
+    
+    private String getStatCardTitle(JPanel card) {
+        // Look for the title label in the stats card
+        java.util.List<JLabel> labels = findComponentsOfType(card, JLabel.class);
+        for (JLabel label : labels) {
+            if (label.getFont().getSize() <= 16) { // Title labels are smaller
+                return label.getText();
+            }
+        }
+        return null;
+    }
+    
+    private <T extends Component> java.util.List<T> findComponentsOfType(Container container, Class<T> type) {
+        java.util.List<T> components = new java.util.ArrayList<>();
+        findComponentsOfTypeRecursive(container, type, components);
+        return components;
+    }
+    
+    private <T extends Component> void findComponentsOfTypeRecursive(Container container, Class<T> type, java.util.List<T> components) {
+        for (Component component : container.getComponents()) {
+            if (type.isInstance(component)) {
+                components.add(type.cast(component));
+            }
+            if (component instanceof Container) {
+                findComponentsOfTypeRecursive((Container) component, type, components);
             }
         }
     }
@@ -1029,8 +1128,6 @@ public class AdminPanelForm extends JFrame {
             dispose();
         }
     }
-    
-
     
     private void setupLayout() {
         setLayout(new BorderLayout());

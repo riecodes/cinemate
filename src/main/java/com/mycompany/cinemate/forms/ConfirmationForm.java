@@ -302,11 +302,15 @@ public class ConfirmationForm extends JFrame {
             Integer quantity = entry.getValue();
             
             if (quantity > 0) {
-                BigDecimal subtotal = ticketType.getPrice().multiply(BigDecimal.valueOf(quantity));
+                // Calculate price as: movie base price + ticket type price (same as BookingTicketsForm)
+                BigDecimal moviePrice = selectedMovie.getPrice();
+                BigDecimal ticketTypePrice = ticketType.getPrice();
+                BigDecimal totalPricePerTicket = moviePrice.add(ticketTypePrice);
+                BigDecimal subtotal = totalPricePerTicket.multiply(BigDecimal.valueOf(quantity));
                 
                 Object[] rowData = {
-                    selectedMovie.getTitle(),
-                    ticketType.getFormattedPrice(),
+                    selectedMovie.getTitle() + " (" + ticketType.getTypeName() + ")",
+                    "₱" + totalPricePerTicket.toString(),
                     quantity.toString(),
                     seatList.toString(),
                     timeString,
