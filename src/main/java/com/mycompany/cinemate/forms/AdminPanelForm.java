@@ -609,39 +609,42 @@ public class AdminPanelForm extends JFrame {
     
     private void showAddMovieDialog() {
         JDialog dialog = new JDialog(this, "Add New Movie", true);
-        dialog.setSize(500, 400);
+        dialog.setSize(600, 500);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
         
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
         
         // Form fields
-        JTextField titleField = new JTextField(20);
-        JTextArea descArea = new JTextArea(4, 20);
+        JTextField titleField = new JTextField(25);
+        JTextArea descArea = new JTextArea(6, 30);
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
         JScrollPane descScroll = new JScrollPane(descArea);
         
-                    JTextField startDateField = new JTextField("2025-06-30", 15);
-                    JTextField endDateField = new JTextField("2025-07-20", 15);
-        JTextField priceField = new JTextField("200.00", 15);
-        JTextField posterField = new JTextField("/assets/", 20);
+        JTextField startDateField = new JTextField("2025-06-30", 20);
+        JTextField endDateField = new JTextField("2025-07-20", 20);
+        JTextField priceField = new JTextField("200.00", 20);
+        JTextField posterField = new JTextField("/assets/", 25);
         
-        // Layout components
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        
+        // Title field
         gbc.gridx = 0; gbc.gridy = 0;
         formPanel.add(new JLabel("Title:"), gbc);
-        gbc.gridx = 1;
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(titleField, gbc);
         
-        gbc.gridx = 0; gbc.gridy = 1;
+        // Description area
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
         formPanel.add(new JLabel("Description:"), gbc);
-        gbc.gridx = 1;
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.BOTH; gbc.weightx = 1.0; gbc.weighty = 1.0;
         formPanel.add(descScroll, gbc);
+        
+        // Reset constraints for remaining fields
+        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 0; gbc.weighty = 0;
         
         gbc.gridx = 0; gbc.gridy = 2;
         formPanel.add(new JLabel("Start Date (YYYY-MM-DD):"), gbc);
