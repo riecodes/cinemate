@@ -223,9 +223,34 @@ public class BookingTicketsForm extends JFrame {
         gbc.insets = new Insets(10, 15, 10, 15);
         gbc.anchor = GridBagConstraints.WEST;
         
-        int row = 0;
+        // Add header row to explain pricing
+        gbc.gridx = 0; gbc.gridy = 0;
+        JLabel moviePriceHeader = new JLabel("Movie Base: ₱" + selectedMovie.getPrice());
+        moviePriceHeader.setFont(new Font("Arial", Font.BOLD, 12));
+        moviePriceHeader.setForeground(new Color(200, 200, 200));
+        panel.add(moviePriceHeader, gbc);
+        
+        gbc.gridx = 1; gbc.gridy = 0;
+        JLabel ticketTypeHeader = new JLabel("+ Ticket Type");
+        ticketTypeHeader.setFont(new Font("Arial", Font.BOLD, 12));
+        ticketTypeHeader.setForeground(new Color(200, 200, 200));
+        panel.add(ticketTypeHeader, gbc);
+        
+        gbc.gridx = 2; gbc.gridy = 0;
+        JLabel qtyHeader = new JLabel("Qty");
+        qtyHeader.setFont(new Font("Arial", Font.BOLD, 12));
+        qtyHeader.setForeground(new Color(200, 200, 200));
+        panel.add(qtyHeader, gbc);
+        
+        gbc.gridx = 3; gbc.gridy = 0;
+        JLabel subtotalHeader = new JLabel("Subtotal");
+        subtotalHeader.setFont(new Font("Arial", Font.BOLD, 12));
+        subtotalHeader.setForeground(new Color(200, 200, 200));
+        panel.add(subtotalHeader, gbc);
+        
+        int row = 1;
         for (TicketType ticketType : availableTicketTypes) {
-            // Ticket type name and price
+            // Ticket type name and combined price display
             gbc.gridx = 0; gbc.gridy = row;
             JLabel typeLabel = new JLabel(ticketType.getTypeName());
             typeLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -233,7 +258,8 @@ public class BookingTicketsForm extends JFrame {
             panel.add(typeLabel, gbc);
             
             gbc.gridx = 1; gbc.gridy = row;
-            JLabel priceLabel = new JLabel(ticketType.getFormattedPrice());
+            BigDecimal combinedPrice = selectedMovie.getPrice().add(ticketType.getPrice());
+            JLabel priceLabel = new JLabel("+ " + ticketType.getFormattedPrice() + " = ₱" + combinedPrice);
             priceLabel.setFont(new Font("Arial", Font.PLAIN, 14));
             priceLabel.setForeground(new Color(255, 220, 0));
             panel.add(priceLabel, gbc);
@@ -324,7 +350,12 @@ public class BookingTicketsForm extends JFrame {
             JSpinner spinner = ticketQuantitySpinners.get(ticketType);
             int quantity = (Integer) spinner.getValue();
             
-            BigDecimal subtotal = ticketType.getPrice().multiply(BigDecimal.valueOf(quantity));
+            // Calculate price as: movie base price + ticket type price
+            BigDecimal moviePrice = selectedMovie.getPrice();
+            BigDecimal ticketTypePrice = ticketType.getPrice();
+            BigDecimal totalPricePerTicket = moviePrice.add(ticketTypePrice);
+            
+            BigDecimal subtotal = totalPricePerTicket.multiply(BigDecimal.valueOf(quantity));
             totalPrice = totalPrice.add(subtotal);
             totalTickets += quantity;
             

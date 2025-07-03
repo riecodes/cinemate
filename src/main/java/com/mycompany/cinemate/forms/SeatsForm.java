@@ -298,7 +298,7 @@ public class SeatsForm extends JFrame {
     private void setupEventListeners() {
         backButton.addActionListener(e -> {
             dispose();
-            new ReservationForm().setVisible(true);
+            new ReservationForm(selectedMovie).setVisible(true);
         });
         
         nextButton.addActionListener(e -> proceedToTicketSelection());

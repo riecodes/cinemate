@@ -2,9 +2,13 @@ package com.mycompany.cinemate.forms;
 
 import com.mycompany.cinemate.dao.BookingDAO;
 import com.mycompany.cinemate.dao.MovieDAO;
+import com.mycompany.cinemate.dao.SeatDAO;
+import com.mycompany.cinemate.dao.ShowtimeDAO;
 import com.mycompany.cinemate.dao.StatisticsDAO;
 import com.mycompany.cinemate.models.Booking;
 import com.mycompany.cinemate.models.Movie;
+import com.mycompany.cinemate.models.Seat;
+import com.mycompany.cinemate.models.Showtime;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -32,11 +36,15 @@ public class AdminPanelForm extends JFrame {
     private JButton refreshBtn;
     private JButton logoutBtn;
     private MovieDAO movieDAO;
+    private ShowtimeDAO showtimeDAO;
+    private SeatDAO seatDAO;
     private StatisticsDAO statisticsDAO;
     private BookingDAO bookingDAO;
     
     public AdminPanelForm() {
         movieDAO = new MovieDAO();
+        showtimeDAO = new ShowtimeDAO();
+        seatDAO = new SeatDAO();
         statisticsDAO = new StatisticsDAO();
         bookingDAO = new BookingDAO();
         initializeComponents();
@@ -688,11 +696,18 @@ public class AdminPanelForm extends JFrame {
                 newMovie.setPosterPath(posterPath);
                 newMovie.setActive(true);
                 
-                movieDAO.addMovie(newMovie);
+                boolean movieAdded = movieDAO.addMovie(newMovie);
                 
-                JOptionPane.showMessageDialog(dialog, "Movie added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-                loadMoviesData(); // Refresh the table
+                if (movieAdded) {
+                    // Auto-create showtimes for the new movie
+                    createDefaultShowtimesForMovie(newMovie);
+                    
+                    JOptionPane.showMessageDialog(dialog, "Movie added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                    loadMoviesData(); // Refresh the table
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to add movie.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
                 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -1092,6 +1107,94 @@ public class AdminPanelForm extends JFrame {
                 // Do nothing when losing focus
             }
         });
+    }
+    
+    /**
+     * Creates default showtimes for a newly added movie
+     * This ensures that new movies can be booked immediately
+     */
+    private void createDefaultShowtimesForMovie(Movie movie) {
+        try {
+            java.time.LocalDate startDate = movie.getStartDate();
+            java.time.LocalDate endDate = movie.getEndDate();
+            
+            // Create showtimes for the first 3 days of the movie's run
+            java.time.LocalDate currentDate = startDate;
+            java.time.LocalDate maxDate = startDate.plusDays(2); // Create showtimes for 3 days
+            if (maxDate.isAfter(endDate)) {
+                maxDate = endDate; // Don't exceed the movie's end date
+            }
+            
+            // Standard showtimes: 10:00, 14:00, 18:00, 21:00
+            java.time.LocalTime[] times = {
+                java.time.LocalTime.of(10, 0),
+                java.time.LocalTime.of(14, 0), 
+                java.time.LocalTime.of(18, 0),
+                java.time.LocalTime.of(21, 0)
+            };
+            
+            while (!currentDate.isAfter(maxDate)) {
+                final java.time.LocalDate dateForThisIteration = currentDate; // Make effectively final for lambda
+                
+                for (java.time.LocalTime time : times) {
+                    Showtime showtime = new Showtime();
+                    showtime.setMovieId(movie.getId());
+                    showtime.setShowDate(dateForThisIteration);
+                    showtime.setShowTime(time);
+                    showtime.setAvailableSeats(48); // Standard theater capacity
+                    
+                    boolean showtimeAdded = showtimeDAO.addShowtime(showtime);
+                    
+                    if (showtimeAdded) {
+                        // Get the showtime ID from database to create seats
+                        java.util.List<Showtime> showtimes = showtimeDAO.getShowtimesByMovieId(movie.getId());
+                        Showtime addedShowtime = showtimes.stream()
+                            .filter(s -> s.getShowDate().equals(dateForThisIteration) && s.getShowTime().equals(time))
+                            .findFirst()
+                            .orElse(null);
+                            
+                        if (addedShowtime != null) {
+                            createSeatsForShowtime(addedShowtime);
+                        }
+                    }
+                }
+                currentDate = currentDate.plusDays(1);
+            }
+            
+            System.out.println("Created default showtimes for movie: " + movie.getTitle());
+            
+        } catch (Exception e) {
+            System.err.println("Error creating default showtimes for movie " + movie.getTitle() + ": " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw the exception - movie was still created successfully
+        }
+    }
+    // 
+    /**
+     * Creates seats for a specific showtime
+     * Theater layout: 6 rows (A-F) with 8 seats per row (1-8)
+     */
+    private void createSeatsForShowtime(Showtime showtime) {
+        try {
+            // Create seats: 6 rows (A-F), 8 seats per row (1-8) = 48 total seats
+            for (char row = 'A'; row <= 'F'; row++) {
+                for (int seatNumber = 1; seatNumber <= 8; seatNumber++) {
+                    Seat seat = new Seat();
+                    seat.setShowtimeId(showtime.getId());
+                    seat.setSeatRow(row);
+                    seat.setSeatNumber(seatNumber);
+                    seat.setBooked(false);
+                    
+                    seatDAO.addSeat(seat);
+                }
+            }
+            
+            System.out.println("Created 48 seats for showtime: " + showtime.getFormattedShowDate() + " " + showtime.getFormattedShowTime());
+            
+        } catch (Exception e) {
+            System.err.println("Error creating seats for showtime " + showtime.getId() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     public static void main(String[] args) {
