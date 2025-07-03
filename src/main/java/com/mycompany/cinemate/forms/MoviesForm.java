@@ -220,8 +220,8 @@ public class MoviesForm extends JFrame {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Open the movie details form
-                new MovieDetailsForm(movie.getTitle(), movie.getPosterPath()).setVisible(true);
+                // Open the movie details form with the complete Movie object
+                new MovieDetailsForm(movie).setVisible(true);
             }
         });
         

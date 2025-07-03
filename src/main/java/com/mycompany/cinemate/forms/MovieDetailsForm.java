@@ -1,12 +1,15 @@
 package com.mycompany.cinemate.forms;
 
+import com.mycompany.cinemate.models.Movie;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.time.format.DateTimeFormatter;
 
 public class MovieDetailsForm extends JFrame {
+    private Movie movie;
     private String movieTitle;
     private String movieImagePath;
     private String movieDescription;
@@ -17,11 +20,28 @@ public class MovieDetailsForm extends JFrame {
     private JLabel posterLabel;
     private JButton backButton;
     
+    // Constructor that accepts a Movie object
+    public MovieDetailsForm(Movie movie) {
+        this.movie = movie;
+        this.movieTitle = movie.getTitle();
+        this.movieImagePath = movie.getPosterPath();
+        
+        // Set movie data from the database object
+        setMovieDataFromObject();
+        
+        initializeComponents();
+        setupLayout();
+        setFrameProperties();
+    }
+    
+    // Legacy constructor for backward compatibility
+    @Deprecated
     public MovieDetailsForm(String title, String imagePath) {
         this.movieTitle = title;
         this.movieImagePath = imagePath;
+        this.movie = null;
         
-        // Set default movie data based on title
+        // Set default movie data based on title (fallback)
         setMovieData();
         
         initializeComponents();
@@ -29,6 +49,26 @@ public class MovieDetailsForm extends JFrame {
         setFrameProperties();
     }
     
+    private void setMovieDataFromObject() {
+        if (movie != null) {
+            movieDescription = movie.getDescription();
+            
+            // Format dates
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+            showingStart = movie.getStartDate().format(formatter);
+            showingEnd = movie.getEndDate().format(formatter);
+            
+            // Format price
+            price = "₱" + movie.getPrice().toString();
+        } else {
+            // Fallback data if movie object is null
+            movieDescription = "Movie information not available.";
+            showingStart = "TBA";
+            showingEnd = "TBA";
+            price = "TBA";
+        }
+    }
+
     private void setMovieData() {
         // Official movie data from MOVIE DESCRIPTIONS.pdf
         switch (movieTitle) {
@@ -350,7 +390,17 @@ public class MovieDetailsForm extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new MovieDetailsForm("How To Train Your Dragon", "/assets/how to train your dragon poster.png").setVisible(true);
+                // Create a test Movie object
+                Movie testMovie = new Movie();
+                testMovie.setTitle("How To Train Your Dragon");
+                testMovie.setDescription("A live-action adaptation of the beloved animated classic, this film follows the unlikely friendship between a young Viking named Hiccup and a dragon named Toothless. Together, they challenge long-standing myths and change their world forever.");
+                testMovie.setStartDate(java.time.LocalDate.of(2025, 6, 1));
+                testMovie.setEndDate(java.time.LocalDate.of(2025, 6, 10));
+                testMovie.setPrice(new java.math.BigDecimal("290.00"));
+                testMovie.setPosterPath("/assets/how to train your dragon poster.png");
+                testMovie.setActive(true);
+                
+                new MovieDetailsForm(testMovie).setVisible(true);
             }
         });
     }
