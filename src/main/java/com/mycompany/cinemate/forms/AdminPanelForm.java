@@ -659,7 +659,7 @@ public class AdminPanelForm extends JFrame {
         formPanel.add(priceField, gbc);
         
         gbc.gridx = 0; gbc.gridy = 5;
-        formPanel.add(new JLabel("Poster Path:"), gbc);
+        formPanel.add(new JLabel("Poster Path (e.g., /assets/movie.png):"), gbc);
         gbc.gridx = 1;
         formPanel.add(posterField, gbc);
         
@@ -683,6 +683,11 @@ public class AdminPanelForm extends JFrame {
                     return;
                 }
                 
+                if (!posterPath.startsWith("/assets/")) {
+                    JOptionPane.showMessageDialog(dialog, "Poster path must start with '/assets/' (e.g., /assets/movie.png)", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
                 BigDecimal price = new BigDecimal(priceStr);
                 
                 Movie newMovie = new Movie();
@@ -699,10 +704,10 @@ public class AdminPanelForm extends JFrame {
                 if (movieAdded) {
                     // Auto-create showtimes for the new movie
                     createDefaultShowtimesForMovie(newMovie);
-                    
-                    JOptionPane.showMessageDialog(dialog, "Movie added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    dialog.dispose();
-                    loadMoviesData(); // Refresh the table
+                
+                JOptionPane.showMessageDialog(dialog, "Movie added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+                loadMoviesData(); // Refresh the table
                 } else {
                     JOptionPane.showMessageDialog(dialog, "Failed to add movie.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -805,7 +810,7 @@ public class AdminPanelForm extends JFrame {
             
             // Poster path field
             gbc.gridx = 0; gbc.gridy = 5;
-            formPanel.add(new JLabel("Poster Path:"), gbc);
+            formPanel.add(new JLabel("Poster Path (e.g., /assets/movie.png):"), gbc);
             gbc.gridx = 1;
             JTextField posterField = new JTextField(currentMovie.getPosterPath(), 30);
             formPanel.add(posterField, gbc);
@@ -839,6 +844,14 @@ public class AdminPanelForm extends JFrame {
                         priceStr.isEmpty()) {
                         JOptionPane.showMessageDialog(dialog, 
                             "Please fill in all required fields.", 
+                            "Validation Error", 
+                            JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    
+                    if (!posterPath.isEmpty() && !posterPath.startsWith("/assets/")) {
+                        JOptionPane.showMessageDialog(dialog, 
+                            "Poster path must start with '/assets/' (e.g., /assets/movie.png)", 
                             "Validation Error", 
                             JOptionPane.WARNING_MESSAGE);
                         return;
@@ -977,15 +990,15 @@ public class AdminPanelForm extends JFrame {
     
     private void refreshAllData() {
         try {
-            loadRealData();
+        loadRealData();
             
             // Also refresh dashboard statistics if they exist
             refreshDashboardStatistics();
             
-            JOptionPane.showMessageDialog(this, 
-                "All data refreshed successfully!", 
-                "Refresh Complete", 
-                JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, 
+            "All data refreshed successfully!", 
+            "Refresh Complete", 
+            JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, 
@@ -1008,7 +1021,7 @@ public class AdminPanelForm extends JFrame {
                 JPanel dashboardPanel = (JPanel) dashboardComponent;
                 
                 // Update dashboard statistics cards
-                findAndUpdateStatsCards(dashboardPanel);
+        findAndUpdateStatsCards(dashboardPanel);
                 
                 // Also refresh the movie schedule table if it exists
                 refreshDashboardMovieSchedule(dashboardPanel);
@@ -1076,7 +1089,7 @@ public class AdminPanelForm extends JFrame {
                 // Check if this looks like a stats card (has a border and contains labels)
                 if (panel.getBorder() != null && hasStatsCardStructure(panel)) {
                     panels.add(panel);
-                }
+                    }
                 
                 // Recursively search in child panels
                 collectStatsPanels(panel, panels);

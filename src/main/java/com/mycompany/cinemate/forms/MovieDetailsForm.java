@@ -68,7 +68,7 @@ public class MovieDetailsForm extends JFrame {
             price = "TBA";
         }
     }
-
+    
     private void setMovieData() {
         // Official movie data from MOVIE DESCRIPTIONS.pdf
         switch (movieTitle) {
