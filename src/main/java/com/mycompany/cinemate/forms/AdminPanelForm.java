@@ -159,8 +159,35 @@ public class AdminPanelForm extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
+        // Filter panel at the top
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        filterPanel.setBackground(Color.WHITE);
+        filterPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        
+        JLabel filterLabel = new JLabel("Filter by Status:");
+        filterLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        
+        JComboBox<String> statusFilter = new JComboBox<>(new String[]{"All", "PENDING", "CONFIRMED", "CANCELLED"});
+        statusFilter.setFont(new Font("Arial", Font.PLAIN, 12));
+        statusFilter.setPreferredSize(new Dimension(120, 25));
+        
+        JButton refreshBookingsBtn = new JButton("Refresh");
+        refreshBookingsBtn.setFont(new Font("Arial", Font.BOLD, 11));
+        refreshBookingsBtn.setPreferredSize(new Dimension(80, 25));
+        refreshBookingsBtn.setBackground(new Color(139, 0, 0));
+        refreshBookingsBtn.setForeground(Color.WHITE);
+        refreshBookingsBtn.setFocusPainted(false);
+        
+        statusFilter.addActionListener(e -> filterBookingsByStatus((String) statusFilter.getSelectedItem()));
+        refreshBookingsBtn.addActionListener(e -> loadBookingsData());
+        
+        filterPanel.add(filterLabel);
+        filterPanel.add(statusFilter);
+        filterPanel.add(Box.createHorizontalStrut(10));
+        filterPanel.add(refreshBookingsBtn);
+        
         // Bookings table
-        String[] bookingColumns = {"Booking ID", "Customer Name", "Movie", "Date", "Seats", "Total Price", "Status"};
+        String[] bookingColumns = {"Booking ID", "Customer Name", "Movie", "Showtime Date", "Showtime Time", "Seats", "Total Price", "Status"};
         bookingsTableModel = new DefaultTableModel(bookingColumns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -172,6 +199,16 @@ public class AdminPanelForm extends JFrame {
         bookingsTable.setFont(new Font("Arial", Font.PLAIN, 12));
         bookingsTable.setRowHeight(25);
         
+        // Set optimal column widths
+        bookingsTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Booking ID
+        bookingsTable.getColumnModel().getColumn(1).setPreferredWidth(120); // Customer Name
+        bookingsTable.getColumnModel().getColumn(2).setPreferredWidth(150); // Movie
+        bookingsTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Showtime Date
+        bookingsTable.getColumnModel().getColumn(4).setPreferredWidth(80);  // Showtime Time
+        bookingsTable.getColumnModel().getColumn(5).setPreferredWidth(80);  // Seats
+        bookingsTable.getColumnModel().getColumn(6).setPreferredWidth(90);  // Total Price
+        bookingsTable.getColumnModel().getColumn(7).setPreferredWidth(80);  // Status
+        
         JTableHeader header = bookingsTable.getTableHeader();
         header.setFont(new Font("Arial", Font.BOLD, 12));
         header.setBackground(new Color(139, 0, 0));
@@ -180,7 +217,20 @@ public class AdminPanelForm extends JFrame {
         JScrollPane scrollPane = new JScrollPane(bookingsTable);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(255, 215, 0), 2));
         
+        // Status panel at the bottom
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        statusPanel.setBackground(Color.WHITE);
+        statusPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        
+        JLabel statusLabel = new JLabel("Total Bookings: 0");
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        statusLabel.setForeground(new Color(139, 0, 0));
+        
+        statusPanel.add(statusLabel);
+        
+        panel.add(filterPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(statusPanel, BorderLayout.SOUTH);
         
         return panel;
     }
@@ -531,23 +581,43 @@ public class AdminPanelForm extends JFrame {
             bookingsTableModel.setRowCount(0);
             List<Booking> bookings = bookingDAO.getAllBookings();
             SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
             
             for (Booking booking : bookings) {
                 // Get movie title from MovieDAO
                 Movie movie = movieDAO.getMovieById(booking.getMovieId());
                 String movieTitle = movie != null ? movie.getTitle() : "Unknown Movie";
                 
+                // Get showtime information
+                String showtimeDate = "N/A";
+                String showtimeTime = "N/A";
+                
+                if (booking.getShowtimeId() > 0) {
+                    Showtime showtime = showtimeDAO.getShowtimeById(booking.getShowtimeId());
+                    if (showtime != null) {
+                        showtimeDate = dateFormat.format(java.sql.Date.valueOf(showtime.getShowDate()));
+                        showtimeTime = showtime.getShowTime().toString();
+                    }
+                } else {
+                    // For legacy bookings without showtime_id, use booking date
+                    showtimeDate = dateFormat.format(java.sql.Date.valueOf(booking.getBookingDate()));
+                }
+                
                 Object[] row = {
                     booking.getId(),
                     booking.getCustomerName(),
                     movieTitle,
-                    dateFormat.format(java.sql.Date.valueOf(booking.getBookingDate())),
+                    showtimeDate,
+                    showtimeTime,
                     booking.getSeats(),
                     "₱" + booking.getTotalPrice().toString(),
                     booking.getBookingStatus().toString()
                 };
                 bookingsTableModel.addRow(row);
             }
+            
+            // Update status label
+            updateBookingStatusLabel(bookings.size());
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, 
@@ -555,6 +625,84 @@ public class AdminPanelForm extends JFrame {
                 "Database Error", 
                 JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    private void filterBookingsByStatus(String status) {
+        try {
+            bookingsTableModel.setRowCount(0);
+            List<Booking> bookings;
+            
+            if ("All".equals(status)) {
+                bookings = bookingDAO.getAllBookings();
+            } else {
+                bookings = bookingDAO.getBookingsByStatus(Booking.BookingStatus.valueOf(status));
+            }
+            
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+            
+            for (Booking booking : bookings) {
+                // Get movie title from MovieDAO
+                Movie movie = movieDAO.getMovieById(booking.getMovieId());
+                String movieTitle = movie != null ? movie.getTitle() : "Unknown Movie";
+                
+                // Get showtime information
+                String showtimeDate = "N/A";
+                String showtimeTime = "N/A";
+                
+                if (booking.getShowtimeId() > 0) {
+                    Showtime showtime = showtimeDAO.getShowtimeById(booking.getShowtimeId());
+                    if (showtime != null) {
+                        showtimeDate = dateFormat.format(java.sql.Date.valueOf(showtime.getShowDate()));
+                        showtimeTime = showtime.getShowTime().toString();
+                    }
+                } else {
+                    // For legacy bookings without showtime_id, use booking date
+                    showtimeDate = dateFormat.format(java.sql.Date.valueOf(booking.getBookingDate()));
+                }
+                
+                Object[] row = {
+                    booking.getId(),
+                    booking.getCustomerName(),
+                    movieTitle,
+                    showtimeDate,
+                    showtimeTime,
+                    booking.getSeats(),
+                    "₱" + booking.getTotalPrice().toString(),
+                    booking.getBookingStatus().toString()
+                };
+                bookingsTableModel.addRow(row);
+            }
+            
+            // Update status label
+            updateBookingStatusLabel(bookings.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, 
+                "Error filtering bookings: " + e.getMessage(), 
+                "Database Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void updateBookingStatusLabel(int count) {
+        // Find the status label in the bookings panel and update it
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Find the bookings tab and locate the status label
+                for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                    if ("Bookings".equals(tabbedPane.getTitleAt(i))) {
+                        JPanel bookingsPanel = (JPanel) tabbedPane.getComponentAt(i);
+                        JPanel statusPanel = (JPanel) bookingsPanel.getComponent(2); // Third component is status panel
+                        JLabel statusLabel = (JLabel) statusPanel.getComponent(0);
+                        statusLabel.setText("Total Bookings: " + count);
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // Silently ignore if we can't find the label
+            }
+        });
     }
     
     private void loadUsersData() {
@@ -731,7 +879,7 @@ public class AdminPanelForm extends JFrame {
         dialog.setVisible(true);
     }
     
-        private void showEditMovieDialog() {
+    private void showEditMovieDialog() {
         int selectedRow = moviesTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, 

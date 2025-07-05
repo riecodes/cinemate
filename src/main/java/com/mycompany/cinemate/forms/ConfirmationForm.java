@@ -379,7 +379,7 @@ public class ConfirmationForm extends JFrame {
             booking.setCustomerPhone(customerPhone);
             booking.setMovieId(selectedMovie.getId());
             booking.setShowtimeId(selectedShowtime.getId());
-            booking.setBookingDate(LocalDate.now());
+            booking.setBookingDate(selectedShowtime.getShowDate());
             booking.setTotalPrice(totalPrice);
             booking.setBookingStatus(Booking.BookingStatus.CONFIRMED);
             

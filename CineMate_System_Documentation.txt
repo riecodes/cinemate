@@ -1,0 +1,828 @@
+===================================================================
+                    🎬 CINEMATE SYSTEM DOCUMENTATION 🎬
+                      Comprehensive Guide & Presentation Manual
+===================================================================
+
+TABLE OF CONTENTS
+================
+1. SYSTEM OVERVIEW
+2. TECHNICAL ARCHITECTURE  
+3. DATABASE DESIGN & MODELS
+4. USER INTERFACE COMPONENTS
+5. BUSINESS LOGIC & OPERATIONS
+6. USER FLOWS & FUNCTIONALITY
+7. KEY FEATURES BREAKDOWN
+8. IMPLEMENTATION DETAILS
+9. PRESENTATION GUIDELINES
+
+===================================================================
+1. SYSTEM OVERVIEW
+===================================================================
+
+WHAT IS CINEMATE?
+================
+CineMate is a comprehensive Cinema Management System built using Java Swing and MySQL. 
+It provides a complete solution for managing movie theaters, including:
+- Customer movie browsing and booking
+- Interactive seat selection
+- Multi-step ticket purchasing process
+- Administrative dashboard with real-time statistics
+- Complete movie and booking management
+
+SYSTEM PURPOSE
+=============
+- Streamline cinema operations from customer booking to admin management
+- Provide intuitive user experience for movie selection and booking
+- Enable efficient movie and showtime management for administrators
+- Track revenue, ticket sales, and performance metrics
+- Automate seat availability and booking confirmation processes
+
+TECHNOLOGY STACK
+===============
+• Frontend: Java Swing (Desktop GUI Application)
+• Backend: Java 24 with Object-Oriented Programming
+• Database: MySQL 8.0+ with HikariCP connection pooling
+• Build Tool: Apache Maven 3.6+
+• Development Environment: NetBeans/Eclipse
+• Architecture Pattern: Model-View-Controller (MVC)
+
+===================================================================
+2. TECHNICAL ARCHITECTURE
+===================================================================
+
+SYSTEM ARCHITECTURE
+==================
+
+Layer 1: PRESENTATION LAYER (Forms)
+-----------------------------------
+• MainMenuForm - System entry point
+• MoviesForm - Movie catalog display
+• TicketsForm - Ticket booking interface
+• ReservationForm - Movie and showtime selection
+• SeatsForm - Interactive seat selection
+• BookingTicketsForm - Ticket type selection and customer details
+• PaymentForm - Payment processing simulation
+• ConfirmationForm - Booking confirmation and receipt printing
+• AdminPanelForm - Administrative dashboard and management
+
+Layer 2: BUSINESS LOGIC LAYER (DAO)
+----------------------------------
+• MovieDAO - Movie CRUD operations
+• BookingDAO - Booking management and tracking
+• SeatDAO - Seat availability and booking
+• ShowtimeDAO - Showtime management
+• TicketTypeDAO - Ticket type operations
+• StatisticsDAO - Revenue and performance analytics
+
+Layer 3: DATA MODEL LAYER (Models)
+---------------------------------
+• Movie - Movie entity with pricing and scheduling
+• Booking - Customer booking with status tracking
+• Seat - Individual seat with availability status
+• Showtime - Movie screening schedule
+• TicketType - Different ticket categories (2D, 3D, IMAX)
+
+Layer 4: DATA ACCESS LAYER (Database)
+------------------------------------
+• DatabaseConfig - Connection management with HikariCP
+• DatabaseSchema - Table creation and initialization
+• MySQL Database - Persistent data storage
+
+===================================================================
+3. DATABASE DESIGN & MODELS
+===================================================================
+
+DATABASE SCHEMA
+==============
+
+MOVIES TABLE
+-----------
+• id (Primary Key) - Unique movie identifier
+• title - Movie name
+• description - Movie synopsis and details
+• start_date - When movie starts showing
+• end_date - When movie stops showing
+• price - Base ticket price for the movie
+• poster_path - File path to movie poster image
+• is_active - Whether movie is currently available for booking
+• created_at/updated_at - Timestamp tracking
+
+SHOWTIMES TABLE
+--------------
+• id (Primary Key) - Unique showtime identifier
+• movie_id (Foreign Key) - Links to movies table
+• show_date - Date of the screening
+• show_time - Time of the screening (10:00, 14:00, 18:00, 21:00)
+• available_seats - Number of seats still available (max 48)
+• created_at - Timestamp
+
+SEATS TABLE
+----------
+• id (Primary Key) - Unique seat identifier
+• showtime_id (Foreign Key) - Links to specific showtime
+• seat_row - Row letter (A, B, C, D, E, F)
+• seat_number - Seat number within row (1-8)
+• is_booked - Boolean indicating if seat is reserved
+
+BOOKINGS TABLE
+-------------
+• id (Primary Key) - Unique booking identifier
+• customer_name - Customer's full name
+• customer_email - Customer's email address
+• customer_phone - Customer's phone number
+• movie_id (Foreign Key) - Links to booked movie
+• showtime_id (Foreign Key) - Links to specific showtime
+• booking_date - Date when booking was made
+• seats - Comma-separated list of booked seats (e.g., "A1,A2,B1")
+• total_price - Final amount paid
+• booking_status - PENDING, CONFIRMED, or CANCELLED
+• created_at - Timestamp
+
+TICKET_TYPES TABLE
+-----------------
+• id (Primary Key) - Unique ticket type identifier
+• type_name - Ticket category name (2D REGULAR, 3D PREMIUM, IMAX)
+• price - Additional price for this ticket type
+• is_active - Whether this ticket type is available
+• created_at - Timestamp
+
+BOOKING_ITEMS TABLE
+------------------
+• id (Primary Key) - Unique item identifier
+• booking_id (Foreign Key) - Links to bookings table
+• ticket_type_id (Foreign Key) - Links to ticket_types table
+• quantity - Number of tickets of this type
+• unit_price - Price per ticket
+• subtotal - Total for this ticket type
+
+BOOKING_SEATS TABLE
+------------------
+• id (Primary Key) - Unique record identifier
+• booking_id (Foreign Key) - Links to bookings table
+• seat_id (Foreign Key) - Links to seats table
+
+DATA MODELS EXPLAINED
+====================
+
+Movie Class Functions:
+--------------------
+• Stores movie information including title, description, dates, price
+• getFormattedPrice() - Returns "₱XXX.XX" formatted price
+• getFormattedStartDate()/getFormattedEndDate() - Date formatting
+• isActive() - Checks if movie is available for booking
+• Validation for start/end dates and pricing
+
+Booking Class Functions:
+----------------------
+• Tracks customer booking information and status
+• BookingStatus enum - PENDING, CONFIRMED, CANCELLED
+• getSeatArray() - Converts comma-separated seats to array
+• getSeatCount() - Returns number of booked seats
+• confirm()/cancel() - Status management methods
+• getFormattedTotalPrice() - Currency formatted total
+
+Seat Class Functions:
+-------------------
+• Represents individual cinema seat
+• getSeatLabel() - Returns "A1", "B5" format
+• isAvailable() - Checks if seat can be booked
+• book()/release() - Seat reservation methods
+• getRowIndex()/getColumnIndex() - Position calculations
+
+Showtime Class Functions:
+-----------------------
+• Links movies to specific screening times
+• hasAvailableSeats() - Checks seat availability
+• decreaseAvailableSeats()/increaseAvailableSeats() - Seat counting
+• getFormattedShowTime()/getFormattedShowDate() - Display formatting
+
+TicketType Class Functions:
+-------------------------
+• Defines different ticket categories and pricing
+• calculateSubtotal() - Computes price for quantity
+• getFormattedPrice() - Currency formatting
+• activate()/deactivate() - Availability management
+
+===================================================================
+4. USER INTERFACE COMPONENTS
+===================================================================
+
+MAIN MENU FORM
+=============
+Purpose: System entry point and main navigation
+Functions:
+• createStyledButton() - Creates cinema-themed buttons
+• setupEventHandlers() - Navigation to Movies or Tickets forms
+• Logo display with fallback text if image not found
+
+MOVIES FORM
+==========
+Purpose: Display all available movies in a grid layout
+Functions:
+• loadMoviesFromDatabase() - Fetches active movies from database
+• createMovieCard() - Creates individual movie display cards
+• refreshMovies() - Updates movie display with latest data
+• Image loading with "NO IMAGE" fallback for missing posters
+• Navigation to MovieDetailsForm for individual movies
+
+TICKETS FORM
+===========
+Purpose: Movie selection for booking
+Functions:
+• createTicketsPanel() - Grid layout of movies for booking
+• createBookButton() - "BOOK NOW" buttons for each movie
+• showBookingDialog() - Initiates reservation process
+• refreshTickets() - Updates available movies
+
+MOVIE DETAILS FORM
+==================
+Purpose: Display comprehensive movie information
+Functions:
+• setMovieDataFromObject() - Loads movie data from database
+• createPosterLabel() - Movie poster display with borders
+• displayMovieInfo() - Formatted movie description and details
+• createBookNowButton() - Direct booking initiation
+
+RESERVATION FORM
+===============
+Purpose: Movie, date, and showtime selection
+Functions:
+• loadMovies() - Populates movie dropdown
+• loadDatesForMovie() - Shows available dates for selected movie
+• loadShowtimesForMovieAndDate() - Filters showtimes by date
+• loadMoviePoster() - Displays selected movie poster
+• displayMovieInfo() - Shows movie details
+• Custom renderers for dropdowns with movie information
+
+SEATS FORM
+=========
+Purpose: Interactive seat selection interface
+Functions:
+• initializeSeatGrid() - Creates 6x8 seat button matrix
+• loadSeats() - Fetches seat availability from database
+• setupSeatButton() - Configures individual seat buttons
+• updateSeatSelection() - Tracks selected seats
+• updateSelectionInfo() - Displays selected seat summary
+• Color coding: Green (available), Red (booked), Blue (selected)
+
+BOOKING TICKETS FORM
+===================
+Purpose: Ticket type selection and customer information
+Functions:
+• loadTicketTypes() - Fetches available ticket categories
+• createTicketTypePanel() - Spinner controls for quantities
+• createCustomerInfoPanel() - Customer detail input fields
+• updateTotalPrice() - Calculates combined movie + ticket type pricing
+• validateInput() - Ensures all required fields are filled
+• proceedToConfirmation() - Advances to payment
+
+PAYMENT FORM
+===========
+Purpose: Payment simulation and validation
+Functions:
+• createPaymentSummary() - Displays booking total
+• createCashPaymentPanel() - Cash amount input
+• validatePayment() - Checks sufficient payment amount
+• calculateChange() - Computes change amount
+• Simulated payment processing with success/failure scenarios
+
+CONFIRMATION FORM
+================
+Purpose: Final booking confirmation and receipt
+Functions:
+• generateBookingCode() - Creates unique booking identifier
+• populateConfirmationDetails() - Fills booking summary table
+• saveBookingToDatabase() - Persists booking information
+• markSeatsAsBooked() - Updates seat availability
+• printReceipt() - Generates printable receipt
+• Success notification with booking details
+
+ADMIN PANEL FORM
+===============
+Purpose: Administrative dashboard and management
+Functions:
+• createDashboardPanel() - Statistics and metrics display
+• createMoviesPanel() - Movie CRUD operations
+• createBookingsPanel() - View all customer bookings
+• createUsersPanel() - Customer management
+• loadRealData() - Fetches current system data
+• refreshAllData() - Updates all dashboard information
+• showAddMovieDialog() - Movie creation interface
+• showEditMovieDialog() - Movie modification interface
+• deleteSelectedMovie() - Soft delete (mark inactive)
+• Statistics tracking: Total sales, tickets sold, active movies
+
+===================================================================
+5. BUSINESS LOGIC & OPERATIONS
+===================================================================
+
+MOVIE MANAGEMENT OPERATIONS
+==========================
+
+MovieDAO Functions:
+-----------------
+• getAllActiveMovies() - Returns list of bookable movies
+• getMovieById() - Retrieves specific movie details
+• addMovie() - Creates new movie with validation
+• updateMovie() - Modifies existing movie information
+• deleteMovie() - Soft delete (marks as inactive)
+• reactivateMovie() - Restores inactive movie
+
+Business Rules:
+--------------
+• Movies have base prices that are added to ticket type prices
+• Start date must be before end date
+• Only active movies appear in customer interfaces
+• Movie deletion is soft (preserves booking history)
+
+BOOKING MANAGEMENT OPERATIONS
+============================
+
+BookingDAO Functions:
+-------------------
+• addBooking() - Creates new booking with status PENDING
+• confirmBooking() - Changes status to CONFIRMED
+• cancelBooking() - Changes status to CANCELLED
+• getAllBookings() - Retrieves all booking records
+• getBookingsByStatus() - Filters by booking status
+• updateBookingStatus() - Status management
+
+Business Rules:
+--------------
+• Bookings start as PENDING, become CONFIRMED after payment
+• Cancelled bookings release seats for rebooking
+• Total price = (Movie base price + Ticket type price) × Quantity
+• Booking ID is generated from database auto-increment
+
+SEAT MANAGEMENT OPERATIONS
+=========================
+
+SeatDAO Functions:
+----------------
+• getSeatsByShowtime() - Retrieves seat layout for specific showing
+• bookSeats() - Marks multiple seats as unavailable
+• releaseSeats() - Frees seats from cancelled bookings
+• getSeatAvailability() - Checks if seats are available
+• createSeatsForShowtime() - Initializes 48 seats for new showtime
+
+Business Rules:
+--------------
+• Cinema has 6 rows (A-F) with 8 seats each (total 48)
+• Seats are unique per showtime (same seat different times OK)
+• Booked seats cannot be selected by other customers
+• Seat release only occurs on booking cancellation
+
+SHOWTIME MANAGEMENT OPERATIONS
+=============================
+
+ShowtimeDAO Functions:
+--------------------
+• getShowtimesByMovieId() - Returns all showtimes for a movie
+• addShowtime() - Creates new screening time
+• updateAvailableSeats() - Adjusts seat count after booking
+• getShowtimeById() - Retrieves specific showtime details
+
+Business Rules:
+--------------
+• Each movie has multiple showtimes per day
+• Standard times: 10:00, 14:00, 18:00, 21:00
+• Available seats decrease with each booking
+• Showtimes with 0 available seats don't appear in selection
+
+TICKET TYPE OPERATIONS
+=====================
+
+TicketTypeDAO Functions:
+----------------------
+• getAllActiveTicketTypes() - Returns available ticket categories
+• getTicketTypeById() - Retrieves specific ticket type
+• addTicketType() - Creates new ticket category
+• updateTicketType() - Modifies pricing or availability
+
+Business Rules:
+--------------
+• Default types: 2D REGULAR (₱290), 3D PREMIUM (₱390), IMAX (₱490)
+• Final price = Movie base price + Ticket type price
+• Only active ticket types appear in booking process
+
+STATISTICS OPERATIONS
+====================
+
+StatisticsDAO Functions:
+----------------------
+• getTotalSales() - Calculates revenue from confirmed bookings
+• getTotalTicketsSold() - Counts confirmed ticket quantities
+• getActiveMovieCount() - Number of currently showing movies
+• getBookingsByDateRange() - Filtered booking reports
+
+Business Rules:
+--------------
+• Only CONFIRMED bookings count toward sales
+• PENDING and CANCELLED bookings excluded from totals
+• Statistics update in real-time as bookings are confirmed
+
+===================================================================
+6. USER FLOWS & FUNCTIONALITY
+===================================================================
+
+CUSTOMER BOOKING FLOW
+====================
+
+Step 1: MAIN MENU
+-----------------
+• Customer launches application
+• Sees welcome screen with cinema logo
+• Chooses "MOVIES" (browse catalog) or "TICKETS" (direct booking)
+
+Step 2A: MOVIES PATH
+-------------------
+• Views grid of all available movies with posters
+• Clicks any movie poster to see details
+• MovieDetailsForm shows:
+  - Large movie poster
+  - Complete description
+  - Showing dates
+  - Base price
+  - "BOOK NOW" button
+• Clicking "BOOK NOW" opens ReservationForm
+
+Step 2B: TICKETS PATH
+--------------------
+• Views grid of movies with "BOOK NOW" buttons
+• Directly clicks "BOOK NOW" for desired movie
+• Opens ReservationForm with selected movie
+
+Step 3: RESERVATION SELECTION
+-----------------------------
+• ReservationForm displays:
+  - Movie dropdown (pre-selected if came from specific movie)
+  - Date dropdown (shows only dates with available showtimes)
+  - Showtime dropdown (filtered by date, shows only with available seats)
+  - Movie poster and information panel
+• Customer selects movie, date, and showtime
+• "PROCEED TO SEAT SELECTION" button becomes enabled
+
+Step 4: SEAT SELECTION
+---------------------
+• SeatsForm shows cinema layout (6 rows × 8 seats)
+• Color coding:
+  - Green: Available seats
+  - Red: Already booked (unclickable)
+  - Blue: Customer's selected seats
+• Customer clicks to select/deselect seats
+• Selection info shows chosen seats and count
+• "NEXT" button enabled when at least one seat selected
+
+Step 5: TICKET SELECTION & CUSTOMER INFO
+---------------------------------------
+• BookingTicketsForm displays:
+  - Booking summary (movie, date, time, seats)
+  - Ticket type selection with quantity spinners
+  - Price calculation: (Movie price + Ticket type price) × Quantity
+  - Customer information form (name, email, phone)
+  - Live total price updates
+• Customer fills all required information
+• "PROCEED TO PAYMENT" button advances to payment
+
+Step 6: PAYMENT PROCESSING
+--------------------------
+• PaymentForm shows:
+  - Complete booking summary
+  - Total amount due
+  - Cash payment input field
+  - Change calculation
+• Customer enters cash amount
+• System validates sufficient payment
+• "CONFIRM PAYMENT" processes the payment (simulated)
+
+Step 7: BOOKING CONFIRMATION
+---------------------------
+• ConfirmationForm displays:
+  - Complete booking details in table format
+  - Unique booking ID/code
+  - Customer information
+  - Seat assignments
+  - Payment confirmation
+• "PRINT RECEIPT" saves booking to database and shows success
+• Booking status set to CONFIRMED
+• Seats marked as booked
+• Success message with all booking details
+
+ADMIN MANAGEMENT FLOW
+====================
+
+Step 1: ADMIN LOGIN
+------------------
+• AdminLoginForm prompts for credentials
+• Default: username "admin", password "admin"
+• Successful login opens AdminPanelForm
+
+Step 2: DASHBOARD OVERVIEW
+-------------------------
+• Dashboard tab shows:
+  - Total Sales: Revenue from confirmed bookings
+  - Total Tickets Sold: Count of confirmed tickets
+  - Number of Showing: Active movies count
+  - Movie Schedule: Table of current showtimes
+• "Refresh Data" button updates all statistics
+
+Step 3: MOVIE MANAGEMENT
+-----------------------
+• Movies Management tab displays:
+  - Table of all movies (active and inactive)
+  - Add Movie: Opens dialog for new movie creation
+  - Edit Movie: Modifies selected movie details
+  - Delete Movie: Soft delete (marks inactive)
+• Add/Edit dialogs include:
+  - Title, description, date range, price, poster path
+  - Validation for required fields and date logic
+  - Automatic showtime creation for new movies
+
+Step 4: BOOKING MONITORING
+-------------------------
+• View Bookings tab shows:
+  - Table of all customer bookings
+  - Booking ID, customer name, movie, date, seats, price, status
+  - Real-time updates as customers make bookings
+
+Step 5: USER MANAGEMENT
+----------------------
+• User Management tab displays:
+  - Customer information and booking history
+  - Registration dates and total bookings per customer
+
+SYSTEM INTEGRATION FLOW
+======================
+
+Database Operations Flow:
+-----------------------
+1. Application startup initializes database schema
+2. Creates tables if they don't exist
+3. Populates initial movie and ticket type data
+4. Customer actions trigger DAO operations
+5. Real-time updates maintain data consistency
+6. Admin operations modify business data
+7. Statistics calculated on-demand from current data
+
+Error Handling Flow:
+------------------
+1. Database connection failures show error dialogs
+2. Missing images display "NO IMAGE" placeholders
+3. Validation errors prevent form advancement
+4. Payment failures allow retry
+5. Booking conflicts (sold seats) show warnings
+6. Admin operations validate data before saving
+
+===================================================================
+7. KEY FEATURES BREAKDOWN
+===================================================================
+
+DYNAMIC SEAT AVAILABILITY
+========================
+Feature: Real-time seat booking system
+How it Works:
+• Each showtime has 48 seats (6 rows × 8 seats)
+• Seat status stored in database per showtime
+• Color-coded visual feedback for customers
+• Automatic seat locking on booking confirmation
+• Prevents double-booking conflicts
+
+PRICING CALCULATION ENGINE
+=========================
+Feature: Multi-tier pricing system
+How it Works:
+• Movie base price (varies per movie)
+• Ticket type additional prices (2D: ₱290, 3D: ₱390, IMAX: ₱490)
+• Final price = Movie base + Ticket type
+• Quantity multiplication for multiple tickets
+• Real-time total updates during selection
+
+BOOKING STATUS MANAGEMENT
+========================
+Feature: Multi-stage booking process
+How it Works:
+• PENDING: Initial booking creation
+• CONFIRMED: After successful payment
+• CANCELLED: User or admin cancellation
+• Status affects seat availability and statistics
+• Audit trail for all booking changes
+
+ADMINISTRATIVE DASHBOARD
+=======================
+Feature: Real-time business analytics
+How it Works:
+• Live statistics from database queries
+• Total sales calculation from confirmed bookings
+• Ticket count aggregation across all bookings
+• Active movie count for current offerings
+• Refresh functionality for up-to-date data
+
+MOVIE LIFECYCLE MANAGEMENT
+=========================
+Feature: Complete movie CRUD operations
+How it Works:
+• Add new movies with automatic showtime creation
+• Edit existing movie details and pricing
+• Soft delete preserves booking history
+• Reactivation for previously removed movies
+• Image management with fallback handling
+
+AUTOMATED SHOWTIME CREATION
+==========================
+Feature: Automatic scheduling for new movies
+How it Works:
+• Creates 4 showtimes per day (10:00, 14:00, 18:00, 21:00)
+• Generates 3 days of showtimes for new movies
+• Creates 48 seats for each showtime
+• Maintains consistency with existing movies
+
+RECEIPT GENERATION SYSTEM
+========================
+Feature: Printable booking confirmations
+How it Works:
+• Generates unique booking codes
+• Formatted receipt with all booking details
+• Customer information and seat assignments
+• Payment confirmation and total amount
+• Professional cinema-style formatting
+
+===================================================================
+8. IMPLEMENTATION DETAILS
+===================================================================
+
+DATABASE CONNECTION MANAGEMENT
+=============================
+• HikariCP connection pooling for performance
+• Automatic connection retry and failover
+• Database initialization on startup
+• Connection validation before queries
+• Resource cleanup with try-with-resources
+
+GUI COMPONENT ARCHITECTURE
+=========================
+• Java Swing with custom styling
+• Consistent cinema theme (black, red, gold colors)
+• Responsive layouts using BorderLayout and GridBagLayout
+• Custom button styling with hover effects
+• Image loading with fallback mechanisms
+
+ERROR HANDLING STRATEGY
+======================
+• Database exception catching and user-friendly messages
+• Input validation before processing
+• Null checks and safe defaults
+• Resource cleanup in finally blocks
+• Graceful degradation for missing resources
+
+PERFORMANCE OPTIMIZATIONS
+========================
+• Lazy loading of images
+• Efficient database queries with prepared statements
+• Connection pooling reduces overhead
+• Cached data where appropriate
+• Minimal GUI updates for better responsiveness
+
+SECURITY CONSIDERATIONS
+======================
+• SQL injection prevention with prepared statements
+• Input sanitization and validation
+• Safe file path handling for images
+• Proper resource disposal
+• Basic admin authentication
+
+SCALABILITY FEATURES
+===================
+• Modular DAO pattern allows easy database changes
+• Configurable database connection settings
+• Extensible ticket type system
+• Flexible movie scheduling
+• Expandable seat layout (currently 6×8)
+
+CODE ORGANIZATION
+================
+• Clear separation of concerns (MVC pattern)
+• Package structure by functionality
+• Consistent naming conventions
+• Comprehensive commenting
+• Reusable utility methods
+
+===================================================================
+9. PRESENTATION GUIDELINES
+===================================================================
+
+PRESENTATION STRUCTURE RECOMMENDATIONS
+=====================================
+
+Opening (5 minutes):
+------------------
+• Introduce CineMate as comprehensive cinema management solution
+• Highlight dual-interface design (customer + admin)
+• Emphasize real-world applicability
+
+System Demo (15 minutes):
+------------------------
+• Start with customer booking flow:
+  - Show movie browsing and selection
+  - Demonstrate interactive seat selection
+  - Walk through ticket purchasing process
+  - Show booking confirmation and receipt
+
+• Follow with admin functionality:
+  - Display dashboard with live statistics
+  - Demonstrate movie management operations
+  - Show booking monitoring capabilities
+
+Technical Deep-dive (10 minutes):
+-------------------------------
+• Explain MVC architecture
+• Discuss database design decisions
+• Highlight key programming concepts used
+• Show code examples of important functions
+
+Features & Benefits (5 minutes):
+------------------------------
+• Real-time seat availability
+• Multi-tier pricing system
+• Comprehensive booking management
+• Administrative analytics
+• Professional user experience
+
+KEY TALKING POINTS
+=================
+
+Business Value:
+--------------
+• Streamlines cinema operations
+• Reduces manual booking errors
+• Provides valuable business analytics
+• Improves customer experience
+• Scales to multiple movies and showtimes
+
+Technical Excellence:
+-------------------
+• Proper OOP implementation with inheritance and encapsulation
+• Professional database design with foreign keys and constraints
+• GUI best practices with consistent theming
+• Error handling and validation throughout
+• Performance optimizations for responsiveness
+
+Innovation Aspects:
+-----------------
+• Interactive seat selection visualization
+• Dynamic pricing calculation engine
+• Real-time statistics dashboard
+• Automated showtime and seat creation
+• Professional receipt generation
+
+DEMONSTRATION TIPS
+=================
+
+For Customer Flow:
+----------------
+• Use a movie with an appealing poster
+• Select seats in different rows to show flexibility
+• Choose different ticket types to demonstrate pricing
+• Complete the full flow to show confirmation
+
+For Admin Panel:
+--------------
+• Show statistics before and after a booking
+• Add a new movie to demonstrate automatic showtime creation
+• Edit an existing movie to show update functionality
+• Use refresh button to show real-time updates
+
+Technical Demonstration:
+----------------------
+• Show database tables and relationships
+• Highlight important code sections
+• Explain design patterns used
+• Demonstrate error handling
+
+COMMON QUESTIONS & ANSWERS
+=========================
+
+Q: How does the system handle concurrent bookings?
+A: Database transactions and seat-level locking prevent double-booking conflicts.
+
+Q: Can the system scale to multiple cinemas?
+A: The modular design allows easy extension to support multiple locations.
+
+Q: How are movie posters managed?
+A: Images stored in assets folder with fallback to "NO IMAGE" display.
+
+Q: What happens if payment fails?
+A: Booking remains PENDING, seats stay available for retry.
+
+Q: How are statistics calculated?
+A: Real-time queries aggregate data from confirmed bookings only.
+
+===================================================================
+                              END OF DOCUMENTATION
+===================================================================
+
+This comprehensive guide covers every aspect of the CineMate system
+for your presentation. Each section builds upon the previous to give
+a complete understanding of the system's functionality, design, and
+implementation.
+
+Good luck with your presentation! 🎬 

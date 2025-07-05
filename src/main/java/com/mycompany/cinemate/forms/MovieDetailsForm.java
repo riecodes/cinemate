@@ -132,6 +132,12 @@ public class MovieDetailsForm extends JFrame {
                 showingEnd = "June 27, 2025";
                 price = "₱200";
                 break;
+            // case "Extra Movie":
+            //     movieDescription = "A psychological horror film that follows a group of friends who become lost in a Scandinavian forest, where they encounter ancient and terrifying forces. As paranoia sets in and the group begins to fracture, they must face both supernatural threats and their own darkest fears.";
+            //     showingStart = "June 03, 2025";
+            //     showingEnd = "June 27, 2025";
+            //     price = "₱200";
+            //     break;
             default:
                 movieDescription = "An amazing cinematic experience that will captivate audiences of all ages. Don't miss this incredible film that promises to deliver entertainment, emotion, and unforgettable moments.";
                 showingStart = "Coming Soon";

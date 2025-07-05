@@ -1,0 +1,395 @@
+===================================================================
+                    🎬 CINEMATE SYSTEM FLOW DIAGRAMS 🎬
+                      Visual Guides for Presentation
+===================================================================
+
+CUSTOMER BOOKING FLOW DIAGRAM
+==============================
+
+                    ┌─────────────────┐
+                    │   MAIN MENU     │
+                    │   (Entry Point) │
+                    └─────────┬───────┘
+                             │
+                    ┌────────▼────────┐
+                    │    CHOOSE:      │
+                    │ Movies | Tickets│
+                    └─────┬──────┬────┘
+                          │      │
+                  ┌───────▼──┐   │
+                  │ MOVIES   │   │
+                  │ FORM     │   │
+                  │(Browse)  │   │
+                  └──────┬───┘   │
+                         │       │
+                  ┌──────▼───┐   │
+                  │ MOVIE    │   │
+                  │ DETAILS  │   │
+                  │ FORM     │   │
+                  └──────┬───┘   │
+                         │       │
+                         │   ┌───▼────┐
+                         │   │TICKETS │
+                         │   │FORM    │
+                         │   │(Direct)│
+                         │   └───┬────┘
+                         │       │
+                  ┌──────▼───────▼───┐
+                  │  RESERVATION     │
+                  │  FORM            │
+                  │ Select Movie,    │
+                  │ Date, Showtime   │
+                  └──────────┬───────┘
+                             │
+                  ┌──────────▼───────┐
+                  │   SEATS FORM     │
+                  │ Interactive Seat │
+                  │   Selection      │
+                  │ (6x8 Grid)       │
+                  └──────────┬───────┘
+                             │
+                  ┌──────────▼───────┐
+                  │ BOOKING TICKETS  │
+                  │     FORM         │
+                  │ Ticket Types +   │
+                  │Customer Details  │
+                  └──────────┬───────┘
+                             │
+                  ┌──────────▼───────┐
+                  │  PAYMENT FORM    │
+                  │ Cash Payment     │
+                  │ Simulation       │
+                  └──────────┬───────┘
+                             │
+                  ┌──────────▼───────┐
+                  │ CONFIRMATION     │
+                  │     FORM         │
+                  │ Receipt & Save   │
+                  │ to Database      │
+                  └──────────────────┘
+
+ADMIN MANAGEMENT FLOW DIAGRAM
+=============================
+
+                    ┌─────────────────┐
+                    │  ADMIN LOGIN    │
+                    │  (Credentials)  │
+                    └─────────┬───────┘
+                             │
+                    ┌────────▼────────┐
+                    │  ADMIN PANEL    │
+                    │  (Tabbed View)  │
+                    └─────────┬───────┘
+                             │
+          ┌──────┬───────────┼───────────┬──────┐
+          │      │           │           │      │
+    ┌─────▼──┐ ┌─▼──────┐ ┌──▼────┐ ┌────▼──┐ ┌─▼────┐
+    │DASHBRD │ │MOVIES  │ │BOOKING│ │USERS  │ │REFRES│
+    │        │ │MGMT    │ │VIEW   │ │MGMT   │ │DATA  │
+    │Stats + │ │        │ │       │ │       │ │      │
+    │Schedule│ │CRUD    │ │Monitor│ │Track  │ │Live  │
+    └────────┘ └────────┘ └───────┘ └───────┘ └──────┘
+
+DATABASE INTERACTION FLOW
+==========================
+
+GUI LAYER          DAO LAYER           DATABASE LAYER
+─────────          ─────────           ──────────────
+
+┌─────────┐       ┌───────────┐       ┌─────────────┐
+│ Forms   │ ────▶ │ MovieDAO  │ ────▶ │   movies    │
+│         │       │           │       │   table     │
+└─────────┘       └───────────┘       └─────────────┘
+
+┌─────────┐       ┌───────────┐       ┌─────────────┐
+│Booking  │ ────▶ │BookingDAO │ ────▶ │  bookings   │
+│Process  │       │           │       │   table     │
+└─────────┘       └───────────┘       └─────────────┘
+
+┌─────────┐       ┌───────────┐       ┌─────────────┐
+│ Seat    │ ────▶ │ SeatDAO   │ ────▶ │   seats     │
+│Selection│       │           │       │   table     │
+└─────────┘       └───────────┘       └─────────────┘
+
+┌─────────┐       ┌───────────┐       ┌─────────────┐
+│Showtime │ ────▶ │ShowtimeDAO│ ────▶ │ showtimes   │
+│Display  │       │           │       │   table     │
+└─────────┘       └───────────┘       └─────────────┘
+
+PRICING CALCULATION FLOW
+=========================
+
+Step 1: Base Movie Price
+┌─────────────────┐
+│   Movie Price   │
+│   (from DB)     │
+│   Example: ₱310 │
+└─────────┬───────┘
+          │
+          ▼
+Step 2: Add Ticket Type Price
+┌─────────────────┐
+│ Ticket Type     │
+│ Additional Fee  │
+│ 2D: +₱290      │
+│ 3D: +₱390      │
+│ IMAX: +₱490    │
+└─────────┬───────┘
+          │
+          ▼
+Step 3: Calculate Per Ticket
+┌─────────────────┐
+│ Total Per Ticket│
+│ Movie + Type    │
+│ ₱310 + ₱290     │
+│ = ₱600          │
+└─────────┬───────┘
+          │
+          ▼
+Step 4: Multiply by Quantity
+┌─────────────────┐
+│ Final Total     │
+│ ₱600 × 2 tickets│
+│ = ₱1,200        │
+└─────────────────┘
+
+SEAT BOOKING STATE FLOW
+========================
+
+SEAT STATES:
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ AVAILABLE   │    │ SELECTED    │    │  BOOKED     │
+│ (Green)     │───▶│ (Blue)      │───▶│ (Red)       │
+│ is_booked=F │    │ Temporary   │    │ is_booked=T │
+└─────────────┘    └─────────────┘    └─────────────┘
+       ▲                   │                   │
+       │                   ▼                   │
+       │           ┌─────────────┐             │
+       │           │ CANCELLED   │             │
+       └───────────│ Release     │◀────────────┘
+                   │ Seat        │
+                   └─────────────┘
+
+BOOKING STATUS FLOW
+===================
+
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  PENDING    │───▶│ CONFIRMED   │    │ CANCELLED   │
+│ (Initial)   │    │ (Paid)      │    │ (Admin/User)│
+└─────────────┘    └─────────────┘    └─────────────┘
+       │                   │                   ▲
+       │                   │                   │
+       └───────────────────┴───────────────────┘
+                          │
+                          ▼
+                ┌─────────────────┐
+                │ Seats Released  │
+                │ Stats Updated   │
+                └─────────────────┘
+
+SYSTEM ARCHITECTURE DIAGRAM
+============================
+
+┌─────────────────────────────────────────────────────────────┐
+│                    CINEMATE SYSTEM                          │
+├─────────────────────────────────────────────────────────────┤
+│                 PRESENTATION LAYER                          │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
+│  │MainMenu │ │ Movies  │ │ Tickets │ │  Admin  │           │
+│  │  Form   │ │  Form   │ │  Form   │ │  Panel  │           │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
+├─────────────────────────────────────────────────────────────┤
+│                 BUSINESS LOGIC LAYER                        │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
+│  │ Movie   │ │Booking  │ │  Seat   │ │Statistics│           │
+│  │  DAO    │ │  DAO    │ │  DAO    │ │   DAO   │           │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
+├─────────────────────────────────────────────────────────────┤
+│                   DATA MODEL LAYER                          │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
+│  │ Movie   │ │Booking  │ │  Seat   │ │Showtime │           │
+│  │ Model   │ │ Model   │ │ Model   │ │ Model   │           │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
+├─────────────────────────────────────────────────────────────┤
+│                 DATABASE ACCESS LAYER                       │
+│  ┌─────────────────┐ ┌─────────────────┐                   │
+│  │ DatabaseConfig  │ │ DatabaseSchema  │                   │
+│  │ (HikariCP)      │ │ (Table Creation)│                   │
+│  └─────────────────┘ └─────────────────┘                   │
+├─────────────────────────────────────────────────────────────┤
+│                    DATABASE LAYER                           │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                   MySQL Database                    │   │
+│  │  movies | showtimes | seats | bookings | users     │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+
+ERROR HANDLING FLOW
+====================
+
+┌─────────────┐
+│ User Action │
+└─────┬───────┘
+      │
+      ▼
+┌─────────────┐    ┌─────────────┐
+│ Input       │───▶│ Validation  │
+│ Validation  │    │ Failed?     │
+└─────────────┘    └─────┬───────┘
+                         │
+                  ┌──────▼──────┐
+                  │    Error    │
+                  │   Message   │
+                  │   Display   │
+                  └─────────────┘
+                         │
+      ┌─────────────┐    │
+      │ Database    │◀───┘
+      │ Operation   │
+      └─────┬───────┘
+            │
+      ┌─────▼───────┐    ┌─────────────┐
+      │ Operation   │───▶│ Database    │
+      │ Successful? │    │ Error?      │
+      └─────────────┘    └─────┬───────┘
+            │                  │
+            ▼                  ▼
+      ┌─────────────┐    ┌─────────────┐
+      │ Success     │    │ Error       │
+      │ Message     │    │ Dialog      │
+      └─────────────┘    └─────────────┘
+
+REAL-TIME UPDATES FLOW
+======================
+
+┌─────────────┐
+│ Customer    │
+│ Books Seat  │
+└─────┬───────┘
+      │
+      ▼
+┌─────────────┐
+│ Database    │
+│ Updated     │
+└─────┬───────┘
+      │
+      ┌─────▼─────┐
+      │ Triggers  │
+      │ Updates:  │
+      └─────┬─────┘
+            │
+    ┌───────┼───────┐
+    │       │       │
+    ▼       ▼       ▼
+┌───────┐┌───────┐┌───────┐
+│ Seat  ││Stats  ││Avail  │
+│Status ││Update ││Count  │
+└───────┘└───────┘└───────┘
+    │       │       │
+    └───────┼───────┘
+            │
+            ▼
+    ┌───────────────┐
+    │ Admin Panel   │
+    │ Refreshes     │
+    │ Automatically │
+    └───────────────┘
+
+FUNCTION INTERACTION DIAGRAM
+=============================
+
+Movie Management Functions:
+──────────────────────────
+addMovie() ──┐
+             ├──▶ createDefaultShowtimesForMovie()
+editMovie()──┘              │
+                            ▼
+                      createSeatsForShowtime()
+                            │
+                            ▼
+                      Database Updated
+
+Booking Functions:
+─────────────────
+selectSeats() ──┐
+                ├──▶ calculateTotalPrice()
+selectTickets()─┘              │
+                              ▼
+                      processPayment()
+                              │
+                              ▼
+                      saveBookingToDatabase()
+                              │
+                              ▼
+                      markSeatsAsBooked()
+
+Statistics Functions:
+────────────────────
+getTotalSales() ──┐
+                  ├──▶ updateDashboardStats()
+getTicketCount()──┤              │
+                  ├──────────────┘
+getMovieCount() ──┘
+                  │
+                  ▼
+            refreshDashboard()
+
+===================================================================
+                      PRESENTATION USAGE GUIDE
+===================================================================
+
+HOW TO USE THESE DIAGRAMS IN YOUR PRESENTATION:
+==============================================
+
+1. CUSTOMER FLOW DIAGRAM: Use during live demo to show the complete user journey
+
+2. ADMIN FLOW DIAGRAM: Explain administrative capabilities and dashboard structure
+
+3. DATABASE INTERACTION: Show how GUI communicates with database through DAOs
+
+4. PRICING CALCULATION: Demonstrate the business logic behind ticket pricing
+
+5. SEAT BOOKING STATES: Explain real-time seat management and status changes
+
+6. BOOKING STATUS FLOW: Show how bookings progress through different states
+
+7. ARCHITECTURE DIAGRAM: High-level technical overview of system layers
+
+8. ERROR HANDLING: Demonstrate robust error management and user feedback
+
+9. REAL-TIME UPDATES: Show how changes propagate through the system
+
+10. FUNCTION INTERACTIONS: Explain how different system functions work together
+
+TIPS FOR USING DIAGRAMS:
+========================
+• Point to specific sections while explaining
+• Use diagrams to answer "how does it work?" questions
+• Reference diagrams when demonstrating features
+• Keep diagrams visible during relevant discussions
+• Use them to explain technical concepts to non-technical audience
+
+===================================================================
+                         VISUAL LEGEND
+===================================================================
+
+SYMBOLS USED:
+┌─────┐  = Process/Function
+│     │
+└─────┘
+
+────▶    = Data Flow/Direction
+
+┌─────┐
+│     │  = Decision Point
+└──┬──┘
+   │
+   ▼
+
+┌─────────────────┐
+│ Larger Process  │  = Major System Component
+└─────────────────┘
+
+═══════════════════════════════════════════════════════════════
+                        END OF FLOW DIAGRAMS
+═══════════════════════════════════════════════════════════════ 
